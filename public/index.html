@@ -1,0 +1,754 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Cash Back Dashboard</title>
+  <style>
+    /* ── Reset & Base ─────────────────────────────────────────────────── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:         #0f1117;
+      --surface:    #1a1d27;
+      --surface2:   #222638;
+      --border:     #2e3247;
+      --text:       #e8eaf6;
+      --muted:      #8b8fa8;
+      --accent:     #7c6af7;
+      --accent-dim: #4c3fad;
+      --win:        #22c55e;
+      --win-bg:     #052e16;
+      --gold:       #f5a623;
+      --chase:      #1a6ed8;
+      --apple:      #a0a0a5;
+      --amazon:     #ff9900;
+      --radius:     12px;
+      --radius-sm:  8px;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      font-size: 15px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Layout ───────────────────────────────────────────────────────── */
+    header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    header .logo {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.5px;
+    }
+
+    header .subtitle {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    nav {
+      margin-left: auto;
+      display: flex;
+      gap: 6px;
+    }
+
+    nav a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      transition: all 0.15s;
+    }
+
+    nav a:hover {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(124,106,247,0.08);
+    }
+
+    main {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    section {
+      margin-bottom: 64px;
+    }
+
+    .section-header {
+      margin-bottom: 28px;
+    }
+
+    .section-header h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    .section-header p {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
+    /* ── Cards Grid ───────────────────────────────────────────────────── */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0,0,0,0.4);
+    }
+
+    .card-header {
+      padding: 20px 22px 16px;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+
+    .card-header::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+
+    .card--amex   .card-header::before { background: var(--gold); }
+    .card--chase  .card-header::before { background: var(--chase); }
+    .card--apple  .card-header::before { background: var(--apple); }
+    .card--amazon .card-header::before { background: var(--amazon); }
+
+    .card-name {
+      font-size: 1.05rem;
+      font-weight: 700;
+    }
+
+    .card-type {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .card-badge {
+      display: inline-block;
+      margin-top: 8px;
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 4px;
+      letter-spacing: 0.3px;
+    }
+
+    .card--amex   .card-badge { background: rgba(245,166,35,0.15);  color: var(--gold); }
+    .card--chase  .card-badge { background: rgba(26,110,216,0.15);  color: #60a5fa; }
+    .card--apple  .card-badge { background: rgba(160,160,165,0.15); color: var(--apple); }
+    .card--amazon .card-badge { background: rgba(255,153,0,0.15);   color: var(--amazon); }
+
+    .rewards-list {
+      list-style: none;
+      padding: 16px 22px;
+    }
+
+    .rewards-list li {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      padding: 7px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      gap: 12px;
+      font-size: 0.88rem;
+    }
+
+    .rewards-list li:last-child { border-bottom: none; }
+
+    .reward-desc {
+      color: var(--muted);
+      flex: 1;
+      min-width: 0;
+    }
+
+    .reward-rate {
+      font-weight: 700;
+      white-space: nowrap;
+      font-size: 0.9rem;
+    }
+
+    .rate--5x { color: #a78bfa; }
+    .rate--4x { color: #60a5fa; }
+    .rate--3x { color: #34d399; }
+    .rate--2x { color: #fbbf24; }
+    .rate--1x { color: var(--muted); }
+    .rate--pct5 { color: #a78bfa; }
+    .rate--pct3 { color: #34d399; }
+    .rate--pct2 { color: #fbbf24; }
+    .rate--pct1 { color: var(--muted); }
+
+    .perks-section {
+      padding: 12px 22px 18px;
+      border-top: 1px solid var(--border);
+      background: rgba(255,255,255,0.02);
+    }
+
+    .perks-title {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--accent);
+      margin-bottom: 8px;
+    }
+
+    .perks-list {
+      list-style: none;
+    }
+
+    .perks-list li {
+      font-size: 0.82rem;
+      color: var(--muted);
+      padding: 2px 0;
+    }
+
+    .perks-list li::before {
+      content: '✦ ';
+      color: var(--accent);
+      font-size: 0.65rem;
+    }
+
+    /* ── Category Recommender ─────────────────────────────────────────── */
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+      gap: 16px;
+    }
+
+    .category-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .category-header {
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .category-icon {
+      font-size: 1.3rem;
+      line-height: 1;
+    }
+
+    .category-name {
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .category-winner {
+      margin-left: auto;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--win);
+      padding: 3px 10px;
+      background: var(--win-bg);
+      border-radius: 20px;
+      border: 1px solid rgba(34,197,94,0.25);
+      white-space: nowrap;
+    }
+
+    .ranking-list {
+      list-style: none;
+      padding: 10px 16px 12px;
+    }
+
+    .ranking-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 6px;
+      border-radius: 6px;
+      transition: background 0.1s;
+    }
+
+    .ranking-item:hover {
+      background: rgba(255,255,255,0.03);
+    }
+
+    .ranking-item.winner {
+      background: rgba(34,197,94,0.06);
+      border: 1px solid rgba(34,197,94,0.15);
+    }
+
+    .rank-num {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--muted);
+      width: 16px;
+      text-align: center;
+      flex-shrink: 0;
+    }
+
+    .rank-num.gold-num { color: #f5a623; }
+
+    .rank-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .rank-card-name {
+      flex: 1;
+      font-size: 0.88rem;
+      color: var(--text);
+    }
+
+    .rank-card-name.muted { color: var(--muted); }
+
+    .rank-note {
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: block;
+    }
+
+    .rank-rate {
+      font-size: 0.88rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    /* card color dots */
+    .dot--amex   { background: var(--gold); }
+    .dot--chase  { background: var(--chase); }
+    .dot--apple  { background: var(--apple); }
+    .dot--amazon { background: var(--amazon); }
+
+    /* ── Legend ───────────────────────────────────────────────────────── */
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.85rem;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+
+    /* ── Footer ───────────────────────────────────────────────────────── */
+    footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.8rem;
+      padding: 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    /* ── Responsive ───────────────────────────────────────────────────── */
+    @media (max-width: 640px) {
+      header { flex-wrap: wrap; gap: 8px; }
+      nav { margin-left: 0; width: 100%; }
+      nav a { font-size: 0.8rem; padding: 5px 10px; }
+      main { padding: 24px 16px 60px; }
+      .cards-grid { grid-template-columns: 1fr; }
+      .categories-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">💳 Cash Back</div>
+    <div class="subtitle">James Hull · Rewards Dashboard</div>
+  </div>
+  <nav>
+    <a href="#cards">My Cards</a>
+    <a href="#categories">Best Card By Category</a>
+  </nav>
+</header>
+
+<main>
+
+  <!-- ── Section 1: Cards ───────────────────────────────────────────── -->
+  <section id="cards">
+    <div class="section-header">
+      <h2>My Cards</h2>
+      <p>Full rewards breakdown for each card in your wallet</p>
+    </div>
+
+    <div class="cards-grid">
+
+      <!-- Amex Gold -->
+      <div class="card card--amex">
+        <div class="card-header">
+          <div class="card-name">Amex Gold Card</div>
+          <div class="card-type">American Express</div>
+          <div class="card-badge">Membership Rewards Points</div>
+        </div>
+        <ul class="rewards-list">
+          <li>
+            <span class="reward-desc">US restaurants</span>
+            <span class="reward-rate rate--4x">4x</span>
+          </li>
+          <li>
+            <span class="reward-desc">US supermarkets <span style="font-size:0.75rem">(up to $25k/yr)</span></span>
+            <span class="reward-rate rate--4x">4x</span>
+          </li>
+          <li>
+            <span class="reward-desc">Flights (direct or amextravel.com)</span>
+            <span class="reward-rate rate--3x">3x</span>
+          </li>
+          <li>
+            <span class="reward-desc">Prepaid hotels at amextravel.com</span>
+            <span class="reward-rate rate--2x">2x</span>
+          </li>
+          <li>
+            <span class="reward-desc">Everything else</span>
+            <span class="reward-rate rate--1x">1x</span>
+          </li>
+        </ul>
+        <div class="perks-section">
+          <div class="perks-title">Perks</div>
+          <ul class="perks-list">
+            <li>$120/yr dining credit ($10/mo)</li>
+            <li>$120/yr Uber Cash ($10/mo)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Chase Sapphire Preferred -->
+      <div class="card card--chase">
+        <div class="card-header">
+          <div class="card-name">Chase Sapphire Preferred</div>
+          <div class="card-type">Chase</div>
+          <div class="card-badge">Ultimate Rewards · 1.25¢/pt via Chase Travel</div>
+        </div>
+        <ul class="rewards-list">
+          <li>
+            <span class="reward-desc">Travel via Chase Travel portal</span>
+            <span class="reward-rate rate--5x">5x</span>
+          </li>
+          <li>
+            <span class="reward-desc">Dining (restaurants, delivery, takeout)</span>
+            <span class="reward-rate rate--3x">3x</span>
+          </li>
+          <li>
+            <span class="reward-desc">Online groceries <span style="font-size:0.75rem">(excl. Target, Walmart, clubs)</span></span>
+            <span class="reward-rate rate--3x">3x</span>
+          </li>
+          <li>
+            <span class="reward-desc">Select streaming services</span>
+            <span class="reward-rate rate--3x">3x</span>
+          </li>
+          <li>
+            <span class="reward-desc">All other travel</span>
+            <span class="reward-rate rate--2x">2x</span>
+          </li>
+          <li>
+            <span class="reward-desc">Everything else</span>
+            <span class="reward-rate rate--1x">1x</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Apple Card -->
+      <div class="card card--apple">
+        <div class="card-header">
+          <div class="card-name">Apple Card</div>
+          <div class="card-type">Goldman Sachs · Apple</div>
+          <div class="card-badge">Daily Cash · Straight % Back</div>
+        </div>
+        <ul class="rewards-list">
+          <li>
+            <span class="reward-desc">Apple (direct)</span>
+            <span class="reward-rate rate--pct3">3%</span>
+          </li>
+          <li>
+            <span class="reward-desc">Apple Pay: Uber, Uber Eats, Walgreens, Nike, Panera, T-Mobile, ExxonMobil</span>
+            <span class="reward-rate rate--pct3">3%</span>
+          </li>
+          <li>
+            <span class="reward-desc">All Apple Pay purchases</span>
+            <span class="reward-rate rate--pct2">2%</span>
+          </li>
+          <li>
+            <span class="reward-desc">Physical card / all other</span>
+            <span class="reward-rate rate--pct1">1%</span>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Amazon Prime Visa -->
+      <div class="card card--amazon">
+        <div class="card-header">
+          <div class="card-name">Amazon Prime Visa</div>
+          <div class="card-type">Chase · Amazon</div>
+          <div class="card-badge">Straight % Back</div>
+        </div>
+        <ul class="rewards-list">
+          <li>
+            <span class="reward-desc">Amazon.com &amp; Whole Foods</span>
+            <span class="reward-rate rate--pct5">5%</span>
+          </li>
+          <li>
+            <span class="reward-desc">Restaurants</span>
+            <span class="reward-rate rate--pct2">2%</span>
+          </li>
+          <li>
+            <span class="reward-desc">Gas stations</span>
+            <span class="reward-rate rate--pct2">2%</span>
+          </li>
+          <li>
+            <span class="reward-desc">Drugstores</span>
+            <span class="reward-rate rate--pct2">2%</span>
+          </li>
+          <li>
+            <span class="reward-desc">Local transit</span>
+            <span class="reward-rate rate--pct2">2%</span>
+          </li>
+          <li>
+            <span class="reward-desc">Everything else</span>
+            <span class="reward-rate rate--pct1">1%</span>
+          </li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ── Section 2: Category Recommender ───────────────────────────── -->
+  <section id="categories">
+    <div class="section-header">
+      <h2>Best Card by Category</h2>
+      <p>Top card highlighted — ranked from best to worst for each spending category</p>
+    </div>
+
+    <div class="legend">
+      <div class="legend-item"><div class="legend-dot dot--amex"></div> Amex Gold</div>
+      <div class="legend-item"><div class="legend-dot dot--chase"></div> Chase Sapphire Preferred</div>
+      <div class="legend-item"><div class="legend-dot dot--apple"></div> Apple Card</div>
+      <div class="legend-item"><div class="legend-dot dot--amazon"></div> Amazon Prime Visa</div>
+    </div>
+
+    <div class="categories-grid" id="categories-grid"></div>
+  </section>
+
+</main>
+
+<footer>
+  Built for James Hull · Rates as of 2025 · Always verify current terms with your card issuer
+</footer>
+
+<script>
+  const CATEGORIES = [
+    {
+      name: 'Groceries',
+      subtitle: 'US supermarkets (not Whole Foods)',
+      icon: '🛒',
+      rankings: [
+        { card: 'amex',   label: 'Amex Gold',                rate: '4x pts',   note: 'Up to $25k/yr' },
+        { card: 'chase',  label: 'Chase Sapphire Preferred', rate: '3x pts',   note: 'Online groceries only' },
+        { card: 'apple',  label: 'Apple Card',               rate: '2%',       note: 'Via Apple Pay' },
+        { card: 'amazon', label: 'Amazon Prime Visa',        rate: '1%',       note: null },
+      ]
+    },
+    {
+      name: 'Whole Foods',
+      subtitle: 'Amazon-owned grocery stores',
+      icon: '🌿',
+      rankings: [
+        { card: 'amazon', label: 'Amazon Prime Visa',        rate: '5%',       note: null },
+        { card: 'amex',   label: 'Amex Gold',                rate: '4x pts',   note: 'US supermarkets include WF' },
+        { card: 'apple',  label: 'Apple Card',               rate: '2%',       note: 'Via Apple Pay' },
+        { card: 'chase',  label: 'Chase Sapphire Preferred', rate: '1x pts',   note: 'WF excluded' },
+      ]
+    },
+    {
+      name: 'Restaurants & Dining',
+      subtitle: 'Restaurants, delivery, takeout',
+      icon: '🍽️',
+      rankings: [
+        { card: 'amex',   label: 'Amex Gold',                rate: '4x pts',   note: 'No cap' },
+        { card: 'chase',  label: 'Chase Sapphire Preferred', rate: '3x pts',   note: 'Restaurants, delivery & takeout' },
+        { card: 'amazon', label: 'Amazon Prime Visa',        rate: '2%',       note: null },
+        { card: 'apple',  label: 'Apple Card',               rate: '2%',       note: 'Via Apple Pay — Panera is 3%' },
+      ]
+    },
+    {
+      name: 'Travel (Flights & Hotels)',
+      subtitle: 'Flights, hotels, and all travel',
+      icon: '✈️',
+      rankings: [
+        { card: 'chase',  label: 'Chase Sapphire Preferred', rate: '5x pts',   note: 'Via Chase Travel portal' },
+        { card: 'amex',   label: 'Amex Gold',                rate: '3x pts',   note: 'Flights direct / amextravel.com' },
+        { card: 'chase',  label: 'Chase Sapphire Preferred', rate: '2x pts',   note: 'All other travel' },
+        { card: 'apple',  label: 'Apple Card',               rate: '2%',       note: 'Via Apple Pay' },
+        { card: 'amazon', label: 'Amazon Prime Visa',        rate: '1%',       note: null },
+      ]
+    },
+    {
+      name: 'Amazon / Online Shopping',
+      subtitle: 'Amazon.com purchases',
+      icon: '📦',
+      rankings: [
+        { card: 'amazon', label: 'Amazon Prime Visa',        rate: '5%',       note: 'Amazon.com' },
+        { card: 'apple',  label: 'Apple Card',               rate: '2%',       note: 'Via Apple Pay checkout' },
+        { card: 'amex',   label: 'Amex Gold',                rate: '1x pts',   note: null },
+        { card: 'chase',  label: 'Chase Sapphire Preferred', rate: '1x pts',   note: null },
+      ]
+    },
+    {
+      name: 'Gas',
+      subtitle: 'Gas stations',
+      icon: '⛽',
+      rankings: [
+        { card: 'apple',  label: 'Apple Card',               rate: '3%',       note: 'ExxonMobil via Apple Pay' },
+        { card: 'amazon', label: 'Amazon Prime Visa',        rate: '2%',       note: 'All gas stations' },
+        { card: 'apple',  label: 'Apple Card',               rate: '2%',       note: 'Other stations via Apple Pay' },
+        { card: 'amex',   label: 'Amex Gold',                rate: '1x pts',   note: null },
+        { card: 'chase',  label: 'Chase Sapphire Preferred', rate: '1x pts',   note: null },
+      ]
+    },
+    {
+      name: 'Streaming Services',
+      subtitle: 'Netflix, Spotify, Hulu, etc.',
+      icon: '📺',
+      rankings: [
+        { card: 'chase',  label: 'Chase Sapphire Preferred', rate: '3x pts',   note: 'Select streaming services' },
+        { card: 'apple',  label: 'Apple Card',               rate: '2%',       note: 'Via Apple Pay' },
+        { card: 'amex',   label: 'Amex Gold',                rate: '1x pts',   note: null },
+        { card: 'amazon', label: 'Amazon Prime Visa',        rate: '1%',       note: null },
+      ]
+    },
+    {
+      name: 'Uber / Rideshare',
+      subtitle: 'Uber, Uber Eats, rideshare',
+      icon: '🚗',
+      rankings: [
+        { card: 'apple',  label: 'Apple Card',               rate: '3%',       note: 'Uber & Uber Eats via Apple Pay' },
+        { card: 'chase',  label: 'Chase Sapphire Preferred', rate: '3x pts',   note: 'As dining / travel' },
+        { card: 'amex',   label: 'Amex Gold',                rate: '4x pts',   note: 'If placed as restaurant order' },
+        { card: 'amazon', label: 'Amazon Prime Visa',        rate: '2%',       note: 'As restaurant' },
+      ]
+    },
+    {
+      name: 'Apple Purchases',
+      subtitle: 'Apple Store, App Store, apple.com',
+      icon: '🍎',
+      rankings: [
+        { card: 'apple',  label: 'Apple Card',               rate: '3%',       note: 'Apple directly (always)' },
+        { card: 'amex',   label: 'Amex Gold',                rate: '1x pts',   note: null },
+        { card: 'chase',  label: 'Chase Sapphire Preferred', rate: '1x pts',   note: null },
+        { card: 'amazon', label: 'Amazon Prime Visa',        rate: '1%',       note: null },
+      ]
+    },
+    {
+      name: 'Everything Else',
+      subtitle: 'General / catch-all spending',
+      icon: '🛍️',
+      rankings: [
+        { card: 'apple',  label: 'Apple Card',               rate: '2%',       note: 'Via Apple Pay' },
+        { card: 'amex',   label: 'Amex Gold',                rate: '1x pts',   note: null },
+        { card: 'chase',  label: 'Chase Sapphire Preferred', rate: '1x pts',   note: null },
+        { card: 'amazon', label: 'Amazon Prime Visa',        rate: '1%',       note: 'Physical card' },
+      ]
+    },
+  ];
+
+  const RATE_COLORS = {
+    '5x pts': '#a78bfa', '5%': '#a78bfa',
+    '4x pts': '#60a5fa',
+    '3x pts': '#34d399', '3%': '#34d399',
+    '2x pts': '#fbbf24', '2%': '#fbbf24',
+    '1x pts': '#6b7280', '1%': '#6b7280',
+  };
+
+  function rateColor(rate) {
+    return RATE_COLORS[rate] || '#8b8fa8';
+  }
+
+  function buildCategoryCard(cat) {
+    const winner = cat.rankings[0];
+    const winnerLabel = `${winner.label} · ${winner.rate}`;
+
+    const items = cat.rankings.map((r, i) => {
+      const isWinner = i === 0;
+      const color = rateColor(r.rate);
+      return `
+        <li class="ranking-item ${isWinner ? 'winner' : ''}">
+          <span class="rank-num ${isWinner ? 'gold-num' : ''}">${i + 1}</span>
+          <span class="rank-dot dot--${r.card}"></span>
+          <span class="rank-card-name ${!isWinner ? 'muted' : ''}">
+            ${r.label}
+            ${r.note ? `<span class="rank-note">${r.note}</span>` : ''}
+          </span>
+          <span class="rank-rate" style="color:${color}">${r.rate}</span>
+        </li>
+      `;
+    }).join('');
+
+    return `
+      <div class="category-card">
+        <div class="category-header">
+          <span class="category-icon">${cat.icon}</span>
+          <div>
+            <div class="category-name">${cat.name}</div>
+            <div style="font-size:0.75rem;color:var(--muted)">${cat.subtitle}</div>
+          </div>
+          <div class="category-winner">${winner.rate}</div>
+        </div>
+        <ul class="ranking-list">${items}</ul>
+      </div>
+    `;
+  }
+
+  document.getElementById('categories-grid').innerHTML =
+    CATEGORIES.map(buildCategoryCard).join('');
+</script>
+
+</body>
+</html>
